@@ -87,7 +87,7 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="px-6 py-4 border-t border-white/10 bg-gradient-to-r from-purple-600/20 to-indigo-600/20">
         <p className="text-xs text-gray-600 font-medium">
-          © 2024 HRMS Lite
+          © 2026 HRMS Lite
         </p>
       </div>
     </aside>

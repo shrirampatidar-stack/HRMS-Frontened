@@ -23,6 +23,7 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [recentAttendance, setRecentAttendance] = useState([]);
+  const [allEmployees, setAllEmployees] = useState([]);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -36,6 +37,9 @@ export default function Dashboard() {
       // Load employees
       const employeesResponse = await api.get("/employees");
       const employees = employeesResponse.data || [];
+      
+      // Store all employees for display
+      setAllEmployees(employees);
 
       // Load today's attendance
       const today = new Date().toISOString().split("T")[0];
@@ -201,6 +205,62 @@ export default function Dashboard() {
             }
           />
         </div>
+
+        {/* All Employees */}
+        <Card
+          title="All Employees"
+          subtitle={`Complete list of all ${allEmployees.length} employees in the system`}
+        >
+          {loading ? (
+            <div className="py-12">
+              <Loader size="lg" />
+            </div>
+          ) : allEmployees.length === 0 ? (
+            <EmptyState
+              title="No employees found"
+              description="Get started by adding your first employee to the system."
+              icon={
+                <svg
+                  className="w-8 h-8 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              }
+            />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableHeaderCell>Employee ID</TableHeaderCell>
+                <TableHeaderCell>Full Name</TableHeaderCell>
+                <TableHeaderCell>Email</TableHeaderCell>
+                <TableHeaderCell>Department</TableHeaderCell>
+              </TableHeader>
+              <TableBody>
+                {allEmployees.map((employee) => {
+                  const employeeKey = employee.id || employee.employeeId || employee._id;
+                  return (
+                    <TableRow key={employeeKey}>
+                      <TableCell className="font-black text-lg bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        {employee.employeeId}
+                      </TableCell>
+                      <TableCell className="font-medium">{employee.fullName}</TableCell>
+                      <TableCell className="text-gray-600">{employee.email}</TableCell>
+                      <TableCell>{employee.department}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </Card>
 
         {/* Recent Attendance */}
         <Card

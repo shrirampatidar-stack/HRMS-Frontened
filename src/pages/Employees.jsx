@@ -42,12 +42,18 @@ export default function Employees() {
     try {
       setLoading(true);
       const response = await api.get("/employees");
-      setEmployees(response.data || []);
+      // Ensure we always set an array, even if response.data is null/undefined
+      const employeesList = Array.isArray(response.data) ? response.data : [];
+      setEmployees(employeesList);
+      console.log("Loaded employees from database:", employeesList.length);
     } catch (err) {
+      console.error("Error loading employees:", err);
       showToast(
         err.response?.data?.message || "Failed to load employees",
         "error"
       );
+      // Set empty array on error to clear the list
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
@@ -108,18 +114,73 @@ export default function Employees() {
   const handleDelete = async () => {
     if (!deleteModal.employee) return;
 
-    try {
-      await api.delete(
-        `/employees/${deleteModal.employee.employeeId || deleteModal.employee._id}`
-      );
-      showToast("Employee deleted successfully!", "success");
+    const employeeToDelete = deleteModal.employee;
+    // Use database id (Long) instead of employeeId (String) for deletion
+    const databaseId = employeeToDelete.id;
+    
+    if (!databaseId) {
+      showToast("Invalid employee data. Cannot delete.", "error");
       setDeleteModal({ isOpen: false, employee: null });
-      loadEmployees();
+      return;
+    }
+    
+    // Store the employee for potential rollback
+    const deletedEmployee = { ...employeeToDelete };
+    
+    // Close modal immediately
+    setDeleteModal({ isOpen: false, employee: null });
+    
+    // Optimistically remove from UI immediately - MUST happen before API call
+    setEmployees(prev => {
+      return prev.filter(emp => emp.id !== databaseId);
+    });
+    
+    try {
+      // Delete from backend using database id
+      const response = await api.delete(`/employees/${databaseId}`);
+      
+      // Check if deletion was successful
+      // Accept 200/204 status codes or response with success message
+      const isSuccess = 
+        response.status === 200 || 
+        response.status === 204 || 
+        (response.data && (response.data.success === true || response.data.success === 'true' || response.data.message));
+      
+      if (isSuccess) {
+        // Show success message
+        showToast("Employee deleted successfully from database!", "success");
+        // Refresh the list to ensure consistency with database
+        // Small delay to ensure backend has processed
+        setTimeout(async () => {
+          await loadEmployees();
+        }, 300);
+      } else {
+        throw new Error(response.data?.error || response.data?.message || "Delete operation failed");
+      }
+      
     } catch (err) {
-      showToast(
-        err.response?.data?.message || "Failed to delete employee",
-        "error"
-      );
+      // If delete fails, restore the employee to the list
+      setEmployees(prev => {
+        // Check if employee is already in the list
+        const exists = prev.some(emp => emp.id === databaseId);
+        
+        if (!exists) {
+          // Restore the deleted employee at the end
+          return [...prev, deletedEmployee];
+        }
+        return prev;
+      });
+      
+      // Log error for debugging
+      console.error("Delete error:", err);
+      
+      const errorMessage = 
+        err.response?.data?.error || 
+        err.response?.data?.message || 
+        err.message || 
+        "Failed to delete employee from database. Please try again.";
+      
+      showToast(errorMessage, "error");
     }
   };
 
@@ -193,27 +254,31 @@ export default function Employees() {
                 <TableHeaderCell className="text-right">Actions</TableHeaderCell>
               </TableHeader>
               <TableBody>
-                {employees.map((employee) => (
-                  <TableRow key={employee.employeeId || employee._id}>
-                    <TableCell className="font-black text-lg bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse-glow">
-                      {employee.employeeId}
-                    </TableCell>
-                    <TableCell className="font-medium">{employee.fullName}</TableCell>
-                    <TableCell className="text-gray-600">{employee.email}</TableCell>
-                    <TableCell>{employee.department}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() =>
-                          setDeleteModal({ isOpen: true, employee })
-                        }
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {employees.map((employee) => {
+                  // Use database id as key for React rendering
+                  const employeeKey = employee.id || employee.employeeId || employee._id;
+                  return (
+                    <TableRow key={employeeKey}>
+                      <TableCell className="font-black text-lg bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse-glow">
+                        {employee.employeeId}
+                      </TableCell>
+                      <TableCell className="font-medium">{employee.fullName}</TableCell>
+                      <TableCell className="text-gray-600">{employee.email}</TableCell>
+                      <TableCell>{employee.department}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() =>
+                            setDeleteModal({ isOpen: true, employee })
+                          }
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
