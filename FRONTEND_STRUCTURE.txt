@@ -1,0 +1,122 @@
+HRMS LITE - FRONTEND COMPLETE STRUCTURE
+========================================
+
+This file contains the complete file structure and key code snippets for reference.
+
+PROJECT ROOT
+-----------
+HR-PORTAL/
+├── src/
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Layout.jsx
+│   │   │   ├── Sidebar.jsx
+│   │   │   └── Topbar.jsx
+│   │   └── ui/
+│   │       ├── Button.jsx
+│   │       ├── Input.jsx
+│   │       ├── Select.jsx
+│   │       ├── Badge.jsx
+│   │       ├── Card.jsx
+│   │       ├── Modal.jsx
+│   │       ├── Table.jsx
+│   │       ├── Loader.jsx
+│   │       ├── EmptyState.jsx
+│   │       ├── Toast.jsx
+│   │       └── ToastContainer.jsx
+│   ├── contexts/
+│   │   └── ToastContext.jsx
+│   ├── hooks/
+│   │   ├── useToast.js
+│   │   └── useModal.js
+│   ├── pages/
+│   │   ├── Dashboard.jsx
+│   │   ├── Employees.jsx
+│   │   └── Attendance.jsx
+│   ├── services/
+│   │   └── api.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   ├── index.css
+│   └── App.css
+├── server/ (Backend - to be created)
+├── package.json
+├── tailwind.config.js
+├── postcss.config.js
+├── vite.config.js
+└── index.html
+
+KEY FEATURES IMPLEMENTED
+------------------------
+
+1. DASHBOARD PAGE
+   - Statistics cards (Total Employees, Present Today, Absent Today)
+   - Recent attendance table
+   - Animated icons and gradients
+   - Empty states
+
+2. EMPLOYEES PAGE
+   - Add employee modal form
+   - Employee list table
+   - Delete confirmation modal
+   - Form validation
+   - Empty states
+
+3. ATTENDANCE PAGE
+   - Mark attendance form
+   - Employee selector
+   - Date picker
+   - Status selector (Present/Absent)
+   - Attendance records table
+   - Date filter
+   - Total present days display
+
+UI COMPONENTS
+------------
+
+Button: Variants (primary, secondary, danger, outline, ghost), Sizes (sm, md, lg)
+Input: Label, error display, validation states
+Select: Custom styled dropdown
+Badge: Variants (default, primary, success, danger, warning, info)
+Card: Glass morphism, shimmer effects, gradient headers
+Modal: Glass morphism, gradient header, overlay
+Table: Gradient header, hover effects, glass body
+Loader: Dual-layer spinner
+EmptyState: Icon, title, description, action button
+Toast: Auto-dismiss, slide-in animation, types (success, error, info, warning)
+
+API CONFIGURATION
+----------------
+
+Base URL: http://localhost:8080/api (dev) or VITE_API_URL (prod)
+Content-Type: application/json
+Error handling: Interceptor for connection errors
+
+STYLING
+-------
+
+Framework: Tailwind CSS
+Design: Glass morphism, gradients, animations
+Colors: Purple/Indigo primary, Green success, Red danger
+Effects: Shimmer, glow, float, fade, bounce animations
+
+VALIDATION RULES
+---------------
+
+Employee:
+- employeeId: Required, unique
+- fullName: Required, min 2 characters
+- email: Required, valid email format, unique
+- department: Required
+
+Attendance:
+- employeeId: Required, must exist
+- date: Required, valid date, max today
+- status: Required, enum (Present/Absent)
+
+ERROR HANDLING
+-------------
+
+Client-side: Form validation, toast notifications
+Server-side: HTTP status codes (400, 404, 409, 500)
+Error format: { message: string, errors?: array }
